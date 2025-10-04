@@ -6,6 +6,8 @@ services:
     command: ["./docker-entrypoint.sh"]
     expose:
       - "3000"
+    networks:
+      - coolify
     healthcheck:
       test: ["CMD-SHELL", "curl --fail http://localhost:3000 || exit 1"]
       interval: 10s
@@ -15,6 +17,8 @@ services:
     image: quay.io/oauth2-proxy/oauth2-proxy:v7.6.0
     expose:
       - "4180"
+    network:
+      - coolify
     environment:
       # Core provider config (fill these in your .env)
       OAUTH2_PROXY_PROVIDER: keycloak-oidc
@@ -41,3 +45,6 @@ services:
       # Logging
       OAUTH2_PROXY_STANDARD_LOGGING: "true"
       OAUTH2_PROXY_SILENCE_PING_LOGGING: "true"
+networks:
+  coolify:
+    external: true
