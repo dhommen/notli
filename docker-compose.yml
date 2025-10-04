@@ -1,0 +1,43 @@
+services:
+  nextjs:
+    build: .
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+    command: ["./docker-entrypoint.sh"]
+    expose:
+      - "3000"
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail http://localhost:3000 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  oauth2-proxy:
+    image: quay.io/oauth2-proxy/oauth2-proxy:v7.6.0
+    expose:
+      - "4180"
+    environment:
+      # Core provider config (fill these in your .env)
+      OAUTH2_PROXY_PROVIDER: keycloak-oidc
+      OAUTH2_PROXY_OIDC_ISSUER_URL: ${OAUTH2_PROXY_OIDC_ISSUER_URL}
+      OAUTH2_PROXY_CLIENT_ID: ${OAUTH2_PROXY_CLIENT_ID}
+      OAUTH2_PROXY_CLIENT_SECRET: ${OAUTH2_PROXY_CLIENT_SECRET}
+      OAUTH2_PROXY_COOKIE_SECRET: ${OAUTH2_PROXY_COOKIE_SECRET}
+      # Allow external redirect domains for rd= on /oauth2/sign_out
+      OAUTH2_PROXY_WHITELIST_DOMAINS: ${OAUTH2_PROXY_WHITELIST_DOMAINS}
+      # Proxy/server
+      OAUTH2_PROXY_HTTP_ADDRESS: 0.0.0.0:4180
+      OAUTH2_PROXY_REDIRECT_URL: https://notli/oauth2/callback
+      OAUTH2_PROXY_UPSTREAMS: http://nextjs:3000
+      OAUTH2_PROXY_EMAIL_DOMAINS: "*"
+      OAUTH2_PROXY_REVERSE_PROXY: "true"
+      OAUTH2_PROXY_TRUST_PROXY_HEADERS: "true"
+      OAUTH2_PROXY_SET_XAUTHREQUEST: "true"
+      OAUTH2_PROXY_PASS_AUTHORIZATION: "true"
+      # Cookies for localhost over http
+      OAUTH2_PROXY_COOKIE_SECURE: "false"
+      OAUTH2_PROXY_COOKIE_SAMESITE: lax
+      # Public routes (no auth)
+      OAUTH2_PROXY_SKIP_AUTH_ROUTES: ^/$|^/_next/.*$|^/public/.*$
+      # Logging
+      OAUTH2_PROXY_STANDARD_LOGGING: "true"
+      OAUTH2_PROXY_SILENCE_PING_LOGGING: "true"
